@@ -1,0 +1,23 @@
+const assert = require('assert');
+const { scheduleFor, canFinishBeforeServiceEnds } = require('../src/services/schedule');
+assert.strictEqual(scheduleFor('10:59').menu_edit_open, true);
+assert.strictEqual(scheduleFor('11:00').menu_edit_open, false);
+assert.strictEqual(scheduleFor('11:59').ordering_open, true);
+assert.strictEqual(scheduleFor('11:59').service_ordering, false);
+assert.strictEqual(scheduleFor('12:00').ordering_open, true);
+assert.strictEqual(scheduleFor('12:00').service_ordering, true);
+assert.strictEqual(scheduleFor('12:00').fresh_ordering_open, true);
+assert.strictEqual(scheduleFor('12:59').service_ordering, true);
+assert.strictEqual(scheduleFor('13:39').fresh_ordering_open, true);
+assert.strictEqual(scheduleFor('13:40').fresh_ordering_open, false);
+assert.strictEqual(scheduleFor('13:59').ordering_open, true);
+assert.strictEqual(scheduleFor('13:59').service_ordering, true);
+assert.strictEqual(scheduleFor('14:00').ordering_open, false);
+assert.strictEqual(scheduleFor('14:00').service_ordering, false);
+assert.strictEqual(scheduleFor('12:00').service_end, '14:00');
+assert.strictEqual(canFinishBeforeServiceEnds('13:30', 30), true);
+assert.strictEqual(canFinishBeforeServiceEnds('13:30', 31), false);
+assert.strictEqual(canFinishBeforeServiceEnds('13:51', 10), false);
+assert.strictEqual(canFinishBeforeServiceEnds('14:00', 0), false);
+
+console.log('All canteen schedule tests passed');
