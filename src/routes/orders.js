@@ -55,6 +55,14 @@ async function getSchedule() {
   return scheduleFor(row.current_time_value);
 }
 
+async function markPreparedPreordersReady() {
+  const schedule = await getSchedule();
+  if (!shouldAutoReadyPreparedOrder(schedule.current_time, true)) return;
+  await db.run(
+    "UPDATE orders SET status = 'READY', updated_at = CURRENT_TIMESTAMP WHERE status = 'PLACED' AND ready_stock_order = 1 AND DATE(created_at) = CURRENT_DATE"
+  );
+}
+
 // Validates cart lines against the menu and computes totals and prep time
 async function buildLines(api, items) {
   if (!Array.isArray(items) || items.length === 0) throw httpError(400, 'Your cart is empty');
@@ -161,6 +169,7 @@ router.get('/schedule', async (req, res) => {
 
 // GET /api/orders/mine  (logged-in student)
 router.get('/mine', requireAuth, async (req, res) => {
+  await markPreparedPreordersReady();
   const orders = await db.query(
     `${ORDER_SELECT} WHERE o.user_id = ? ORDER BY o.created_at DESC, o.id DESC`,
     [req.user.id]
@@ -172,6 +181,7 @@ router.get('/mine', requireAuth, async (req, res) => {
 
 // GET /api/orders  (admin and kitchen, optional ?status=PLACED)
 router.get('/', requireAdmin, async (req, res) => {
+  await markPreparedPreordersReady();
   const params = [];
   let where = '';
   if (STATUSES.includes(req.query.status)) {
@@ -184,6 +194,7 @@ router.get('/', requireAdmin, async (req, res) => {
 
 // GET /api/orders/:id  (owner or admin)
 router.get('/:id', requireAuth, async (req, res) => {
+  await markPreparedPreordersReady();
   const order = await getOrderDetails(req.params.id);
   if (!order) return res.status(404).json({ message: 'Order not found' });
   if (req.user.role !== 'admin' && order.user_id !== req.user.id) {

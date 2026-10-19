@@ -23,6 +23,7 @@ assert.strictEqual(shouldAutoReadyPreparedOrder('11:59', true), false);
 assert.strictEqual(shouldAutoReadyPreparedOrder('12:00', true), true);
 assert.strictEqual(shouldAutoReadyPreparedOrder('13:59', true), true);
 assert.strictEqual(shouldAutoReadyPreparedOrder('12:00', false), false);
-assert.strictEqual(shouldAutoReadyPreparedOrder('14:00', true), false);
+assert.strictEqual(shouldAutoReadyPreparedOrder('14:00', true), true);
+assert.strictEqual(shouldAutoReadyPreparedOrder('11:59', false), false);
 
 console.log('All canteen schedule tests passed');

@@ -41,7 +41,8 @@ function canFinishBeforeServiceEnds(currentTime, estimatedMinutes) {
 }
 
 function shouldAutoReadyPreparedOrder(currentTime, fullyPrepared) {
-  return Boolean(fullyPrepared) && scheduleFor(currentTime).service_ordering;
+  const now = timeToMinutes(currentTime);
+  return Boolean(fullyPrepared) && now !== null && now >= timeToMinutes(SERVICE_START);
 }
 
 module.exports = {
