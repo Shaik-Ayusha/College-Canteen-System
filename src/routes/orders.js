@@ -203,8 +203,8 @@ router.post('/', requireAuth, async (req, res) => {
   try {
     const orderId = await db.withTransaction(async (tx) => {
       const { lines, total } = await buildLines(tx, req.body.items);
-      const [clock] = await tx.query("SELECT TIME_FORMAT(CURRENT_TIME(), '%H:%i') AS current_time");
-      const schedule = scheduleFor(clock.current_time);
+      const [clock] = await tx.query("SELECT TIME_FORMAT(CURRENT_TIME(), '%H:%i') AS current_time_value");
+      const schedule = scheduleFor(clock.current_time_value);
       if (!schedule.ordering_open) {
         throw httpError(400, 'Ordering is closed. Preorders close at 12:00 noon; prepared food orders close at 2:00 p.m.');
       }
@@ -218,7 +218,7 @@ router.post('/', requireAuth, async (req, res) => {
       if (schedule.service_ordering && cookingMinutes > 0) {
         const queue = await queueMinutesAhead(undefined, tx);
         const estimatedMinutes = estimateMinutes(queue, cookingMinutes);
-        if (!canFinishBeforeServiceEnds(clock.current_time, estimatedMinutes)) {
+        if (!canFinishBeforeServiceEnds(clock.current_time_value, estimatedMinutes)) {
           throw httpError(400, 'The kitchen is at capacity for made-to-order food before 2:00 p.m. Please choose an item already marked prepared.');
         }
       }
