@@ -10,7 +10,7 @@ export default function OrderCard({ order, showCustomer = false, children }) {
         Estimated wait: about {order.estimated_minutes} min. Staff will notify you when it is ready.
       </p>
     );
-  } else if (order.status === 'READY') {
+  } else if (order.status === 'READY' && !showCustomer) {
     eta = (
       showCustomer
         ? <p className="eta">Order is ready. Ask the student to show their pickup OTP.</p>

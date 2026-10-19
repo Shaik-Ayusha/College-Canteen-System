@@ -3,7 +3,7 @@ const db = require('../config/db');
 const { requireAuth, requireAdmin } = require('../middleware/auth');
 const { broadcast } = require('./events');
 const { remainingMinutes, estimateMinutes } = require('../services/wait');
-const { scheduleFor, canFinishBeforeServiceEnds } = require('../services/schedule');
+const { scheduleFor, canFinishBeforeServiceEnds, shouldAutoReadyPreparedOrder } = require('../services/schedule');
 const { createPickupOtp, decryptPickupOtp, otpMatches } = require('../services/pickupOtp');
 
 const router = express.Router();
@@ -211,6 +211,7 @@ router.post('/', requireAuth, async (req, res) => {
       const preparedReservations = lines.map(({ item, qty }) => preparedQuantityForLine(item, qty));
       const fullyPrepared = preparedReservations.every((quantity, index) => quantity === lines[index].qty);
       const readyStockOrder = fullyPrepared;
+      const autoReady = shouldAutoReadyPreparedOrder(clock.current_time_value, fullyPrepared);
       const cookingMinutes = cookingPrepMinutes(lines);
       if (schedule.service_ordering && !fullyPrepared && !schedule.fresh_ordering_open) {
         throw httpError(400, 'Newly cooked food orders close at 1:40 p.m.; only prepared food can be ordered until 2:00 p.m.');
@@ -246,7 +247,7 @@ router.post('/', requireAuth, async (req, res) => {
 
       const id = await tx.insert(
         'INSERT INTO orders (user_id, token_no, total_amount, status, prep_minutes, ready_stock_order, stock_reserved) VALUES (?, ?, ?, ?, ?, ?, 1)',
-        [req.user.id, next.next_token, total.toFixed(2), 'PLACED', cookingMinutes, readyStockOrder ? 1 : 0]
+        [req.user.id, next.next_token, total.toFixed(2), autoReady ? 'READY' : 'PLACED', cookingMinutes, readyStockOrder ? 1 : 0]
       );
 
       for (let index = 0; index < lines.length; index += 1) {
@@ -267,6 +268,7 @@ router.post('/', requireAuth, async (req, res) => {
     });
 
     const order = await getOrderDetails(orderId);
+    if (order.status === 'READY') await attachPickupOtp(order);
     broadcast('order', order, order.user_id);
     res.status(201).json(order);
   } catch (err) {

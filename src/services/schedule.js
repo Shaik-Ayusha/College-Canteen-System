@@ -40,6 +40,10 @@ function canFinishBeforeServiceEnds(currentTime, estimatedMinutes) {
     now + Math.max(0, Number(estimatedMinutes) || 0) <= timeToMinutes(SERVICE_END);
 }
 
+function shouldAutoReadyPreparedOrder(currentTime, fullyPrepared) {
+  return Boolean(fullyPrepared) && scheduleFor(currentTime).service_ordering;
+}
+
 module.exports = {
   MENU_EDIT_CUTOFF,
   ORDERING_CUTOFF,
@@ -49,4 +53,5 @@ module.exports = {
   timeToMinutes,
   scheduleFor,
   canFinishBeforeServiceEnds,
+  shouldAutoReadyPreparedOrder,
 };
