@@ -2,9 +2,9 @@ import { STATUS_LABEL, money } from '../utils.js';
 
 export default function OrderCard({ order, showCustomer = false, children }) {
   let eta = null;
-  if (order.status === 'PLACED' && order.ready_stock_order) {
+  if (!showCustomer && order.status === 'PLACED' && order.ready_stock_order) {
     eta = <p className="eta">Prepared food order received. Staff will confirm when it is ready for pickup.</p>;
-  } else if (order.status === 'PLACED' || order.status === 'PREPARING') {
+  } else if (!showCustomer && (order.status === 'PLACED' || order.status === 'PREPARING')) {
     eta = (
       <p className="eta">
         Estimated wait: about {order.estimated_minutes} min. Staff will notify you when it is ready.
