@@ -51,8 +51,8 @@ async function queueMinutesAhead(beforeId, api = db) {
 }
 
 async function getSchedule() {
-  const [row] = await db.query("SELECT TIME_FORMAT(CURRENT_TIME(), '%H:%i') AS current_time");
-  return scheduleFor(row.current_time);
+  const [row] = await db.query("SELECT TIME_FORMAT(CURRENT_TIME(), '%H:%i') AS current_time_value");
+  return scheduleFor(row.current_time_value);
 }
 
 // Validates cart lines against the menu and computes totals and prep time
@@ -138,7 +138,6 @@ async function attachPickupOtp(order) {
 router.post('/estimate', requireAuth, async (req, res) => {
   try {
     const { lines, prepMinutes } = await buildLines(db, req.body.items);
-    const [clock] = await db.query("SELECT TIME_FORMAT(CURRENT_TIME(), '%H:%i') AS current_time");
     const cookingMinutes = cookingPrepMinutes(lines);
     if (cookingMinutes === 0) {
       return res.json({ estimated_minutes: 0 });
